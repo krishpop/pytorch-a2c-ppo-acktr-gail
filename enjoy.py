@@ -46,7 +46,10 @@ env = make_vec_envs(
     allow_early_resets=False)
 
 # Get a render function
-render_func = get_render_func(env)
+if 'rrc' in args.env_name:
+    render_func = None
+else:
+    render_func = get_render_func(env)
 
 # We need to use the same statistics for normalization as used in training
 actor_critic, obs_rms = \

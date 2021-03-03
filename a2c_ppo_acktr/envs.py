@@ -27,12 +27,32 @@ try:
 except ImportError:
     pass
 
+try:
+    from rrc_iprl_package.envs import rrc_utils
+except ImportError:
+    pass
+
 
 def make_env(env_id, seed, rank, log_dir, allow_early_resets):
     def _thunk():
         if env_id.startswith("dm"):
             _, domain, task = env_id.split('.')
             env = dm_control2gym.make(domain_name=domain, task_name=task)
+        elif env_id.startswith("rrc"):
+            _, ac_type, ac_wrapper = env_id.split('.')
+            ts_relative, sa_relative = False, False
+            scaled_ac, task_space = False, False
+            if ac_wrapper.split('-')[0] == 'task':
+                task_space = True
+                ts_relative = ac_wrapper.split('-')[-1] == 'rel'
+            elif ac_wrapper.split('-')[0] == 'scaled':
+                scaled_ac = True
+                sa_relative = ac_wrapper.split('-')[-1] == 'rel'
+            env = rrc_utils.build_env_fn(
+                    action_type=ac_type, initializer=None, scaled_ac=scaled_ac,
+                    task_space=task_space, sa_relative=sa_relative,
+                    ts_relative=ts_relative, goal_relative=True,
+                    rew_fn='step')()
         else:
             env = gym.make(env_id)
 
